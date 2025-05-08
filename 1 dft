@@ -1,0 +1,72 @@
+clc;            % Clear the command window
+clear all;      % Clear all variables from the workspace
+
+% Load audio file
+[audioData, Fs] = audioread('audio.wav'); % Replace 'audio.wav' with your actual audio file name
+% Fs is the sampling frequency of the audio file
+% audioData contains the audio signal
+
+% Normalize the audio signal
+audioData = audioData / max(abs(audioData)); % Scale the audio signal so that its maximum amplitude is 1
+
+% If the audio has two channels (stereo), convert to mono
+if size(audioData, 2) > 1 % Check if the audio data has more than one column (stereo audio)
+    audioData = mean(audioData, 2); % Take the average of the two channels to create a mono signal
+end
+
+% Define time scale
+t = (0:length(audioData)-1) / Fs; % Create a time vector based on the length of the audio and the sampling frequency
+
+% Plot time series of the audio signal
+figure; % Create a new figure window
+plot(t, audioData); % Plot the audio signal as a function of time
+axis('tight'); % Adjust axes to fit the data tightly
+grid('on'); % Add a grid for better readability
+title('Time Series of Audio Signal'); % Add a title to the plot
+xlabel('Time (s)'); % Label the x-axis
+ylabel('Amplitude'); % Label the y-axis
+% Set custom x-ticks for the time series
+xticks(0:0.5:max(t)); % Set x-axis tick marks at 0, 0.5, 1, 1.5, ...
+xtickformat('%.1f'); % Format the tick labels to show 1 decimal place
+
+% Perform FFT to find dominant frequency
+nfft = 2^nextpow2(length(audioData)); % Find the next power of 2 greater than the length of the signal
+% Using a power of 2 makes the FFT computation faster
+y = fft(audioData, nfft); % Perform the Fast Fourier Transform on the audio signal
+y = abs(y).^2; % Compute the power spectrum density (square of the absolute value of FFT)
+y = y(1:1+nfft/2); % Retain only the positive frequencies (half-spectrum)
+
+% Frequency scale
+f_scale = (0:nfft/2) * Fs / nfft; % Create a frequency vector corresponding to the FFT output
+
+% Find dominant frequency
+[v, k] = max(y); % Find the index (k) of the maximum value in the power spectrum (v = max value)
+f_est = f_scale(k); % Use the index to find the corresponding frequency in the frequency scale
+
+% Plot power spectrum density
+figure; % Create another figure window
+plot(f_scale, y); % Plot the power spectrum density as a function of frequency
+axis('tight'); % Adjust axes to fit the data tightly
+grid('on'); % Add a grid for better readability
+title('Power Spectrum Density'); % Add a title to the plot
+xlabel('Frequency (Hz)'); % Label the x-axis
+ylabel('Power'); % Label the y-axis
+% Set custom x-ticks for the frequency scale
+xticks(0:100:max(f_scale)); % Set x-axis tick marks at 0, 100, 200, 300, ...
+xlim([0 1000]); % Restrict the x-axis to show frequencies from 0 to 1000 Hz
+xtickformat('%.0f'); % Format the tick labels to show integers only
+
+% Display results
+fprintf('Dominant Frequency: Estimated %f Hz\n', f_est); % Print the estimated dominant frequency
+fprintf('Frequency Step (Resolution) = %f Hz\n', f_scale(2)); % Print the frequency resolution of the FFT
+OUTPUT:
+Dominant Frequency: Estimated 233.459473 Hz
+Frequency Step (Resolution) = 0.183105 Hz
+
+ 
+
+
+ 
+
+
+
